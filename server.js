@@ -58,7 +58,7 @@ app.post("/login", (req, res) => {
 });
 
 // --- Add Friend ---
-app.post("/addFriend", (req, res) => {
+app.post('/addFriend', (req, res) => {
   const { username, friend } = req.body;
 
   const users = readUsers();
@@ -67,20 +67,21 @@ app.post("/addFriend", (req, res) => {
     return res.json({ message: "User does not exist" });
   }
 
-  if (!users[username].friends.includes(friend)) {
-    users[username].friends.push(friend);
-  }
+  if (!users[username].friends) users[username].friends = [];
+  if (!users[friend].friends) users[friend].friends = [];
 
-  if (!users[friend].friends.includes(username)) {
+  if (!users[username].friends.includes(friend))
+    users[username].friends.push(friend);
+
+  if (!users[friend].friends.includes(username))
     users[friend].friends.push(username);
-  }
 
   saveUsers(users);
   res.json({ message: "Friend added!" });
 });
 
 // --- Send Message ---
-app.post("/sendMessage", (req, res) => {
+app.post('/sendMessage', (req, res) => {
   const { from, to, text } = req.body;
 
   const users = readUsers();
@@ -89,14 +90,17 @@ app.post("/sendMessage", (req, res) => {
     return res.json({ message: "User does not exist" });
   }
 
+  if (!users[from].messages) users[from].messages = {};
+  if (!users[to].messages) users[to].messages = {};
+
+  if (!users[from].messages[to]) users[from].messages[to] = [];
+  if (!users[to].messages[from]) users[to].messages[from] = [];
+
   const msg = {
     from,
     text,
     time: Date.now()
   };
-
-  if (!users[from].messages[to]) users[from].messages[to] = [];
-  if (!users[to].messages[from]) users[to].messages[from] = [];
 
   users[from].messages[to].push(msg);
   users[to].messages[from].push(msg);
@@ -106,7 +110,7 @@ app.post("/sendMessage", (req, res) => {
 });
 
 // --- Get Messages ---
-app.post("/getMessages", (req, res) => {
+app.post('/getMessages', (req, res) => {
   const { user, friend } = req.body;
 
   const users = readUsers();
@@ -118,6 +122,7 @@ app.post("/getMessages", (req, res) => {
   const msgs = users[user].messages?.[friend] || [];
   res.json(msgs);
 });
+
 
 // --- Get all users (testing only) ---
 app.get("/users", (req, res) => {
