@@ -3,7 +3,10 @@ import fs from "fs";
 import cors from "cors";
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+app.get('/', (req, res) => {
+  res.send('WinLiamOS server running!');
+});
+const PORT = process.env.PORT || 8080;
 
 // Middleware
 app.use(cors());
