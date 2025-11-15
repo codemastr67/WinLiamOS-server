@@ -3,8 +3,8 @@ import fs from "fs";
 import cors from "cors";
 
 const app = express();
-app.get('/', (req, res) => {
-  res.send('WinLiamOS server running!');
+app.get("/", (req, res) => {
+  res.send("WinLiamOS server running!");
 });
 const PORT = process.env.PORT || 8080;
 
@@ -35,7 +35,12 @@ app.post("/signup", (req, res) => {
   if (users[username])
     return res.status(400).json({ error: "User already exists." });
 
-  users[username] = { password };
+  users[username] = {
+    password,
+    friends: [],
+    messages: {}
+  };
+
   saveUsers(users);
   res.json({ success: true, message: "Account created." });
 });
@@ -52,7 +57,69 @@ app.post("/login", (req, res) => {
   }
 });
 
-// --- Get all users (for testing only) ---
+// --- Add Friend ---
+app.post("/addFriend", (req, res) => {
+  const { username, friend } = req.body;
+
+  const users = readUsers();
+
+  if (!users[friend]) {
+    return res.json({ message: "User does not exist" });
+  }
+
+  if (!users[username].friends.includes(friend)) {
+    users[username].friends.push(friend);
+  }
+
+  if (!users[friend].friends.includes(username)) {
+    users[friend].friends.push(username);
+  }
+
+  saveUsers(users);
+  res.json({ message: "Friend added!" });
+});
+
+// --- Send Message ---
+app.post("/sendMessage", (req, res) => {
+  const { from, to, text } = req.body;
+
+  const users = readUsers();
+
+  if (!users[from] || !users[to]) {
+    return res.json({ message: "User does not exist" });
+  }
+
+  const msg = {
+    from,
+    text,
+    time: Date.now()
+  };
+
+  if (!users[from].messages[to]) users[from].messages[to] = [];
+  if (!users[to].messages[from]) users[to].messages[from] = [];
+
+  users[from].messages[to].push(msg);
+  users[to].messages[from].push(msg);
+
+  saveUsers(users);
+  res.json({ message: "sent", msg });
+});
+
+// --- Get Messages ---
+app.post("/getMessages", (req, res) => {
+  const { user, friend } = req.body;
+
+  const users = readUsers();
+
+  if (!users[user] || !users[friend]) {
+    return res.json([]);
+  }
+
+  const msgs = users[user].messages?.[friend] || [];
+  res.json(msgs);
+});
+
+// --- Get all users (testing only) ---
 app.get("/users", (req, res) => {
   res.json(readUsers());
 });
