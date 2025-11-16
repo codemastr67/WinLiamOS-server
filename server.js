@@ -57,6 +57,23 @@ app.post("/login", (req, res) => {
   }
 });
 
+app.post("/deleteAccount", (req, res) => {
+  const { username } = req.body;
+
+  const users = readUsers();
+
+  if (!users[username]) {
+    return res.status(400).json({ error: "User does not exist." });
+  }
+
+  // delete entire user
+  delete users[username];
+
+  saveUsers(users);
+
+  res.json({ success: true, message: "Account deleted permanently." });
+});
+
 // --- Add Friend ---
 app.post('/addFriend', (req, res) => {
   const { username, friend } = req.body;
