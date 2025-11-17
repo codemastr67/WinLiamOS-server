@@ -171,25 +171,6 @@ app.post("/getSignals", (req, res) => {
 app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT}`);
 });
-//FaceTime
-let calls = {}; // temporary in-memory call sessions
-
-app.post("/signal", (req, res) => {
-  const { to, from, data } = req.body;
-
-  if (!calls[to]) calls[to] = [];
-  calls[to].push({ from, data });
-
-  res.json({ success: true });
-});
-
-app.post("/getSignals", (req, res) => {
-  const { user } = req.body;
-  const msgs = calls[user] || [];
-  calls[user] = [];
-  res.json(msgs);
-});
-
 // ---- Games backend (paste into server.js) ----
 const GAMES_FILE = "./games.json";
 function readGames() {
