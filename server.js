@@ -147,6 +147,27 @@ app.get("/users", (req, res) => {
 });
 
 // Start server
+// ----------- SIMPLE SIGNALING SERVER ----------
+let signals = {}; // store pending signals per user
+
+app.post("/signal", (req, res) => {
+  const { to, from, data } = req.body;
+
+  if (!signals[to]) signals[to] = [];
+  signals[to].push({ from, data });
+
+  res.json({ success: true });
+});
+
+app.post("/getSignals", (req, res) => {
+  const { user } = req.body;
+
+  const msgs = signals[user] || [];
+  signals[user] = []; // clear inbox after sending
+
+  res.json(msgs);
+});
+
 app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT}`);
 });
