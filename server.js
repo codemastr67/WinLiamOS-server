@@ -1,6 +1,10 @@
 import express from "express";
 import fs from "fs";
 import cors from "cors";
+import { OAuth2Client } from "google-auth-library";
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+const client = new OAuth2Client(GOOGLE_CLIENT_ID);
+
 
 const app = express();
 app.get("/", (req, res) => {
@@ -167,7 +171,45 @@ app.post("/getSignals", (req, res) => {
 
   res.json(msgs);
 });
+// Google Login
+app.post("/googleLogin", async (req, res) => {
+  const { token } = req.body;
 
+  try {
+    // verify Google token
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: GOOGLE_CLIENT_ID
+    });
+
+    const payload = ticket.getPayload(); 
+    const email = payload.email;
+    const name = payload.name;
+
+    const users = readUsers();
+
+    // auto-create account if not exists
+    if (!users[email]) {
+      users[email] = {
+        password: null,
+        google: true,
+        friends: [],
+        messages: {}
+      };
+      saveUsers(users);
+    }
+
+    res.json({
+      success: true,
+      username: email,
+      name
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(401).json({ error: "Invalid Google token" });
+  }
+});
 app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT}`);
 });
